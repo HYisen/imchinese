@@ -43,6 +43,7 @@ func TestFind(t *testing.T) {
 | SLB.  |`, []string{"name", "ABS", "SLB"}},
 		{"stand alone", "TLB", []string{"TLB"}},
 		{"space before", "基于 latest", []string{"latest"}},
+		{"code span", "换而言之，无视需要开 `GOEXPERIMENT=xxx` 才能使用的内容。", nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

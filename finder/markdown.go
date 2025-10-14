@@ -58,30 +58,62 @@ func (hh *HeadingHelper) Next(headingLevelStartsFromOne int, text string) {
 	hh.recent = neo
 }
 
-func (f *Filter) save(indent string, node HasLines, source []byte) {
+func (f *Filter) save(indent string, s string) {
 	if f.Dump {
-		fmt.Println(indent + Extract(source, node))
+		fmt.Println(indent + s)
 	}
 	f.Result = append(f.Result, Text{
-		Item: Extract(source, node),
+		Item: s,
 		Path: f.hh.Path(),
 	})
+}
+
+type HasChildrenCount interface {
+	ChildCount() int
+}
+
+type PotentialWithInlineNode interface {
+	HasLines
+	HasChildrenCount
+}
+
+func (f *Filter) optionalHandleLines(indent string, s string, node PotentialWithInlineNode) (ok bool) {
+	if node.ChildCount() == 1 {
+		f.save(indent, s)
+		return true
+	}
+	// Node such as Paragraph with inline blocks has multiple children,
+	// we would leave them to [ast.Text] handler inside recursion.
+	// return not ok indicated that should not return immediately.
+	return false
 }
 
 func (f *Filter) traverse(source []byte, node ast.Node, depth int) error {
 	indent := strings.Repeat("  ", depth)
 	if f.Dump {
-		fmt.Printf(indent+"node %v %v\n", node.Type(), node.Kind())
+		fmt.Printf(indent+"node %v %v %d\n", node.Type(), node.Kind(), node.ChildCount())
 	}
 	switch node := node.(type) {
 	case *ast.Heading:
-		f.save(indent, node, source)
+		f.save(indent, Extract(source, node))
 		f.hh.Next(node.Level, Extract(source, node))
+		if node.ChildCount() != 1 {
+			panic(fmt.Errorf("unsupported %d children node %s", node.ChildCount(), Extract(source, node)))
+		}
+		return nil
 	case *ast.Paragraph:
-		f.save(indent, node, source)
+		if f.optionalHandleLines(indent, Extract(source, node), node) {
+			return nil
+		}
 	case *east.TableCell:
-		f.save(indent, node, source)
+		if f.optionalHandleLines(indent, Extract(source, node), node) {
+			return nil
+		}
+	case *ast.Text:
+		f.save(indent, string(node.Value(source)))
 	case *ast.Blockquote:
+		return nil
+	case *ast.CodeSpan:
 		return nil
 	}
 	if node.HasChildren() {
