@@ -24,7 +24,8 @@ type Filter struct {
 	Dump   bool
 	Result []Text
 
-	hh HeadingHelper
+	hh     HeadingHelper
+	source []byte
 }
 
 type HasLines interface {
@@ -88,29 +89,29 @@ func (f *Filter) optionalHandleLines(indent string, s string, node PotentialWith
 	return false
 }
 
-func (f *Filter) traverse(source []byte, node ast.Node, depth int) error {
+func (f *Filter) traverse(node ast.Node, depth int) error {
 	indent := strings.Repeat("  ", depth)
 	if f.Dump {
 		fmt.Printf(indent+"node %v %v %d\n", node.Type(), node.Kind(), node.ChildCount())
 	}
 	switch node := node.(type) {
 	case *ast.Heading:
-		f.save(indent, Extract(source, node))
-		f.hh.Next(node.Level, Extract(source, node))
+		f.save(indent, Extract(f.source, node))
+		f.hh.Next(node.Level, Extract(f.source, node))
 		if node.ChildCount() != 1 {
-			panic(fmt.Errorf("unsupported %d children node %s", node.ChildCount(), Extract(source, node)))
+			panic(fmt.Errorf("unsupported %d children node %s", node.ChildCount(), Extract(f.source, node)))
 		}
 		return nil
 	case *ast.Paragraph:
-		if f.optionalHandleLines(indent, Extract(source, node), node) {
+		if f.optionalHandleLines(indent, Extract(f.source, node), node) {
 			return nil
 		}
 	case *east.TableCell:
-		if f.optionalHandleLines(indent, Extract(source, node), node) {
+		if f.optionalHandleLines(indent, Extract(f.source, node), node) {
 			return nil
 		}
 	case *ast.Text:
-		f.save(indent, string(node.Value(source)))
+		f.save(indent, string(node.Value(f.source)))
 	case *ast.Blockquote:
 		return nil
 	case *ast.CodeSpan:
@@ -118,7 +119,7 @@ func (f *Filter) traverse(source []byte, node ast.Node, depth int) error {
 	}
 	if node.HasChildren() {
 		for child := node.FirstChild(); child != nil; child = child.NextSibling() {
-			if err := f.traverse(source, child, depth+1); err != nil {
+			if err := f.traverse(child, depth+1); err != nil {
 				return err
 			}
 		}
@@ -129,7 +130,8 @@ func (f *Filter) traverse(source []byte, node ast.Node, depth int) error {
 // Render of [Filter] is a dummy as the data would not output to [io.Writer] but inside the receiver struct members,
 // the output input is ignored because words are collected rather than source rendered.
 func (f *Filter) Render(_ io.Writer, source []byte, n ast.Node) error {
-	if err := f.traverse(source, n, 0); err != nil {
+	f.source = source
+	if err := f.traverse(n, 0); err != nil {
 		return err
 	}
 	if f.Dump {
