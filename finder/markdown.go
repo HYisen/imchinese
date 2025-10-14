@@ -8,6 +8,8 @@ import (
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/extension"
+	east "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/text"
 )
@@ -26,24 +28,26 @@ func Extract(source []byte, node HasLines) string {
 	return string(node.Lines().Value(source))
 }
 
+func (f *Filter) save(indent string, node HasLines, source []byte) {
+	if f.Dump {
+		fmt.Println(indent + Extract(source, node))
+	}
+	f.Result = append(f.Result, Extract(source, node))
+}
+
 func (f *Filter) traverse(source []byte, node ast.Node, depth int) error {
 	indent := strings.Repeat("  ", depth)
 	if f.Dump {
 		fmt.Printf(indent+"node %v %v\n", node.Type(), node.Kind())
 	}
-	if hn, ok := node.(*ast.Heading); ok {
-		if f.Dump {
-			fmt.Println(indent + Extract(source, hn))
-		}
-		f.Result = append(f.Result, Extract(source, hn))
-	}
-	if pn, ok := node.(*ast.Paragraph); ok {
-		if f.Dump {
-			fmt.Println(indent + Extract(source, pn))
-		}
-		f.Result = append(f.Result, Extract(source, pn))
-	}
-	if _, ok := node.(*ast.Blockquote); ok {
+	switch node := node.(type) {
+	case *ast.Heading:
+		f.save(indent, node, source)
+	case *ast.Paragraph:
+		f.save(indent, node, source)
+	case *east.TableCell:
+		f.save(indent, node, source)
+	case *ast.Blockquote:
 		return nil
 	}
 	if node.HasChildren() {
@@ -75,7 +79,7 @@ func (f *Filter) AddOptions(option ...renderer.Option) {
 // FilterText parses passage as markdown source code, understand the document and output lines that are candidates.
 // Headings and Paragraphs are typical candidates, while blockquote and code are not.
 func FilterText(passage string) []string {
-	md := goldmark.New()
+	md := goldmark.New(goldmark.WithExtensions(extension.Table))
 	f := &Filter{Dump: false}
 	md.SetRenderer(f)
 	err := md.Convert([]byte(passage), os.Stdout)

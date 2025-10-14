@@ -15,15 +15,7 @@ func main() {
 另外我的一贯作风是把 latest 作为常态基准，在特定情况下难以更新的话，就是一个 TODO 甩上去表示以后会如何使用新特性改善。了解更新历史为兼容旧版本提供可能，尽管我有在尽力避免不能滚动更新的情况。
 
 `
-
-	lines := finder.FilterText(text)
-
-	var words []string
-	for _, line := range lines {
-		words = append(words, finder.FilterWord(line)...)
-	}
-
-	prettyPrint(words)
+	prettyPrint(finder.Find(text))
 }
 
 func prettyPrint(words []string) {
