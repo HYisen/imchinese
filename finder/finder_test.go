@@ -46,6 +46,7 @@ func TestFind(t *testing.T) {
 		{"code span", "换而言之，无视需要开 `GOEXPERIMENT=xxx` 才能使用的内容。", nil},
 		{"date", "2014-12-10", nil},
 		{"version number", "1.10", nil},
+		{"abbreviation with dots", "茶汤颜色也从唐宋时的绿色（a.k.a. 抹茶）变成了明清时的黄色", []string{"a.k.a."}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
