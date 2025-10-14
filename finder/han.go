@@ -1,6 +1,7 @@
 package finder
 
 import (
+	"strconv"
 	"strings"
 	"unicode"
 )
@@ -14,19 +15,20 @@ type Candidate struct {
 // FilterWord reads line as a sentence, find word that are candidates.
 // Words with kanji or punctuations are typically not candidates, while initialisms are.
 func FilterWord(text Text) []Candidate {
-	var ret []Candidate
+	var candidates []Candidate
 	tables := []*unicode.RangeTable{unicode.Han, unicode.Punct}
 	var sb strings.Builder
 	for _, ch := range text.Item {
 		if unicode.IsOneOf(tables, ch) {
-			ret = trimAndAppendNonEmpty(ret, sb.String(), text)
+			candidates = trimAndAppendNonEmpty(candidates, sb.String(), text)
 			sb.Reset()
 		} else {
 			sb.WriteRune(ch)
 		}
 	}
-	ret = trimAndAppendNonEmpty(ret, sb.String(), text)
-	return ret
+	candidates = trimAndAppendNonEmpty(candidates, sb.String(), text)
+	// Considering the punctuation separating, only natual number would be possible here.
+	return DropNumber(candidates)
 }
 
 func trimAndAppendNonEmpty(slice []Candidate, s string, text Text) []Candidate {
@@ -39,4 +41,15 @@ func trimAndAppendNonEmpty(slice []Candidate, s string, text Text) []Candidate {
 		})
 	}
 	return slice
+}
+
+func DropNumber(items []Candidate) []Candidate {
+	var ret []Candidate
+	for _, item := range items {
+		if _, err := strconv.Atoi(item.Word); err == nil {
+			continue
+		}
+		ret = append(ret, item)
+	}
+	return ret
 }
