@@ -13,17 +13,20 @@ func FilterWord(line string) []string {
 	var sb strings.Builder
 	for _, ch := range line {
 		if unicode.IsOneOf(tables, ch) {
-			s := strings.TrimSpace(sb.String())
-			if s != "" {
-				ret = append(ret, s)
-			}
+			ret = trimAndAppendNonEmpty(ret, sb.String())
 			sb.Reset()
 		} else {
 			sb.WriteRune(ch)
 		}
 	}
-	if sb.Len() > 0 {
-		ret = append(ret, sb.String())
-	}
+	ret = trimAndAppendNonEmpty(ret, sb.String())
 	return ret
+}
+
+func trimAndAppendNonEmpty(slice []string, s string) []string {
+	s = strings.TrimSpace(s)
+	if s != "" {
+		slice = append(slice, s)
+	}
+	return slice
 }
