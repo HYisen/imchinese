@@ -22,5 +22,8 @@ func FilterWord(line string) []string {
 			sb.WriteRune(ch)
 		}
 	}
+	if sb.Len() > 0 {
+		ret = append(ret, sb.String())
+	}
 	return ret
 }

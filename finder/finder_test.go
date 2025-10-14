@@ -24,6 +24,7 @@ func TestFind(t *testing.T) {
 | ---- |
 | ABS?  |
 | SLB.  |`, []string{"name", "ABS", "SLB"}},
+		{"stand alone", "TLB", []string{"TLB"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
