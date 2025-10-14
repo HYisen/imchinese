@@ -15,8 +15,8 @@ func main() {
 	prettyPrint(finder.Find(string(data)))
 }
 
-func prettyPrint(words []string) {
-	for i, word := range words {
-		fmt.Printf("%4d %s\n", i, word)
+func prettyPrint(candidates []finder.Candidate) {
+	for i, candidate := range candidates {
+		fmt.Printf("%4d %s 「%s」 %s\n", i, candidate.Word, candidate.Line, candidate.Path)
 	}
 }

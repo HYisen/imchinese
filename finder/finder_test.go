@@ -5,6 +5,23 @@ import (
 	"testing"
 )
 
+func TestHeading(t *testing.T) {
+	input := `# H1
+
+## H2
+
+### H3
+
+TLB`
+	index := 3
+	want := "H1/H2/H3"
+
+	candidates := Find(input)
+	if candidates[index].Path != want {
+		t.Errorf("got %q, want %q", candidates[index].Path, want)
+	}
+}
+
 func TestFind(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -29,7 +46,12 @@ func TestFind(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Find(tt.input); !reflect.DeepEqual(got, tt.want) {
+			candidates := Find(tt.input)
+			var words []string
+			for _, candidate := range candidates {
+				words = append(words, candidate.Word)
+			}
+			if got := words; !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Find() = %v, want %v", got, tt.want)
 			}
 		})

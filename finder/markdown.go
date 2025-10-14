@@ -14,10 +14,17 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
+type Text struct {
+	Item string
+	Path string
+}
+
 type Filter struct {
 	// TODO: when dev freeze, pull dump logic from switch to Dumper implements Renderer for better polymorphism.
 	Dump   bool
-	Result []string
+	Result []Text
+
+	hh HeadingHelper
 }
 
 type HasLines interface {
@@ -28,11 +35,37 @@ func Extract(source []byte, node HasLines) string {
 	return string(node.Lines().Value(source))
 }
 
+// HeadingHelper helps to conclude the path of current content.
+// It requires a non-skip headings hierarchy to work.
+type HeadingHelper struct {
+	memory [6]string // markdown supports H1 to H6 total 6 levels of headings
+	recent int       // the most recent updated memory key
+}
+
+func (hh *HeadingHelper) Path() string {
+	levels := hh.memory[:hh.recent+1] // remove outdated
+	return strings.Join(levels, "/")  // not [path.Join] to escape redundant filepath behaviours
+}
+
+// Next updates the current heading info.
+// PANIC when facing skipping level which shall have been avoided outside.
+func (hh *HeadingHelper) Next(headingLevelStartsFromOne int, text string) {
+	neo := headingLevelStartsFromOne - 1
+	if neo > hh.recent && neo-hh.recent > 1 {
+		panic(fmt.Errorf("skipping level %d=>%d %v", hh.recent, neo, hh.memory))
+	}
+	hh.memory[neo] = text
+	hh.recent = neo
+}
+
 func (f *Filter) save(indent string, node HasLines, source []byte) {
 	if f.Dump {
 		fmt.Println(indent + Extract(source, node))
 	}
-	f.Result = append(f.Result, Extract(source, node))
+	f.Result = append(f.Result, Text{
+		Item: Extract(source, node),
+		Path: f.hh.Path(),
+	})
 }
 
 func (f *Filter) traverse(source []byte, node ast.Node, depth int) error {
@@ -43,6 +76,7 @@ func (f *Filter) traverse(source []byte, node ast.Node, depth int) error {
 	switch node := node.(type) {
 	case *ast.Heading:
 		f.save(indent, node, source)
+		f.hh.Next(node.Level, Extract(source, node))
 	case *ast.Paragraph:
 		f.save(indent, node, source)
 	case *east.TableCell:
@@ -78,7 +112,7 @@ func (f *Filter) AddOptions(option ...renderer.Option) {
 
 // FilterText parses passage as markdown source code, understand the document and output lines that are candidates.
 // Headings and Paragraphs are typical candidates, while blockquote and code are not.
-func FilterText(passage string) []string {
+func FilterText(passage string) []Text {
 	md := goldmark.New(goldmark.WithExtensions(extension.Table))
 	f := &Filter{Dump: false}
 	md.SetRenderer(f)
