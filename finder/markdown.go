@@ -26,6 +26,7 @@ type Filter struct {
 
 	hh     HeadingHelper
 	source []byte
+	depth  int
 }
 
 type HasLines interface {
@@ -59,9 +60,9 @@ func (hh *HeadingHelper) Next(headingLevelStartsFromOne int, text string) {
 	hh.recent = neo
 }
 
-func (f *Filter) save(indent string, s string) {
+func (f *Filter) save(s string) {
 	if f.Dump {
-		fmt.Println(indent + s)
+		fmt.Println(f.indent() + s)
 	}
 	f.Result = append(f.Result, Text{
 		Item: s,
@@ -78,9 +79,9 @@ type PotentialWithInlineNode interface {
 	HasChildrenCount
 }
 
-func (f *Filter) optionalHandleLines(indent string, s string, node PotentialWithInlineNode) (ok bool) {
+func (f *Filter) optionalHandleLines(s string, node PotentialWithInlineNode) (ok bool) {
 	if node.ChildCount() == 1 {
-		f.save(indent, s)
+		f.save(s)
 		return true
 	}
 	// Node such as Paragraph with inline blocks has multiple children,
@@ -89,40 +90,45 @@ func (f *Filter) optionalHandleLines(indent string, s string, node PotentialWith
 	return false
 }
 
-func (f *Filter) traverse(node ast.Node, depth int) error {
-	indent := strings.Repeat("  ", depth)
+func (f *Filter) indent() string {
+	return strings.Repeat("  ", f.depth)
+}
+
+func (f *Filter) traverse(node ast.Node) error {
 	if f.Dump {
-		fmt.Printf(indent+"node %v %v %d\n", node.Type(), node.Kind(), node.ChildCount())
+		fmt.Printf(f.indent()+"node %v %v %d\n", node.Type(), node.Kind(), node.ChildCount())
 	}
 	switch node := node.(type) {
 	case *ast.Heading:
-		f.save(indent, Extract(f.source, node))
+		f.save(Extract(f.source, node))
 		f.hh.Next(node.Level, Extract(f.source, node))
 		if node.ChildCount() != 1 {
 			panic(fmt.Errorf("unsupported %d children node %s", node.ChildCount(), Extract(f.source, node)))
 		}
 		return nil
 	case *ast.Paragraph:
-		if f.optionalHandleLines(indent, Extract(f.source, node), node) {
+		if f.optionalHandleLines(Extract(f.source, node), node) {
 			return nil
 		}
 	case *east.TableCell:
-		if f.optionalHandleLines(indent, Extract(f.source, node), node) {
+		if f.optionalHandleLines(Extract(f.source, node), node) {
 			return nil
 		}
 	case *ast.Text:
-		f.save(indent, string(node.Value(f.source)))
+		f.save(string(node.Value(f.source)))
 	case *ast.Blockquote:
 		return nil
 	case *ast.CodeSpan:
 		return nil
 	}
 	if node.HasChildren() {
+		f.depth++
 		for child := node.FirstChild(); child != nil; child = child.NextSibling() {
-			if err := f.traverse(child, depth+1); err != nil {
+			if err := f.traverse(child); err != nil {
 				return err
 			}
 		}
+		f.depth--
 	}
 	return nil
 }
@@ -131,7 +137,7 @@ func (f *Filter) traverse(node ast.Node, depth int) error {
 // the output input is ignored because words are collected rather than source rendered.
 func (f *Filter) Render(_ io.Writer, source []byte, n ast.Node) error {
 	f.source = source
-	if err := f.traverse(n, 0); err != nil {
+	if err := f.traverse(n); err != nil {
 		return err
 	}
 	if f.Dump {
