@@ -1,7 +1,6 @@
 package finder
 
 import (
-	"strconv"
 	"strings"
 	"unicode"
 )
@@ -23,10 +22,10 @@ func isDotInsideWord(i int, s string) bool {
 	if i+2 < len(s) && s[i+1] == ' ' && unicode.IsUpper(rune(s[i+2])) {
 		return false
 	}
-	// dot between numbers
-	if (i-1 >= 0 && unicode.IsNumber(rune(s[i-1]))) || (i+1 < len(s) && unicode.IsNumber(rune(s[i+1]))) {
-		return false
-	}
+	//// dot between numbers
+	//if (i-1 >= 0 && unicode.IsNumber(rune(s[i-1]))) || (i+1 < len(s) && unicode.IsNumber(rune(s[i+1]))) {
+	//	return false
+	//}
 	return true
 }
 
@@ -64,10 +63,19 @@ func trimAndAppendNonEmpty(slice []Candidate, s string, text Text) []Candidate {
 func DropNumber(items []Candidate) []Candidate {
 	var ret []Candidate
 	for _, item := range items {
-		if _, err := strconv.Atoi(item.Word); err == nil {
-			continue
+		if !isNumber(item.Word) {
+			ret = append(ret, item)
 		}
-		ret = append(ret, item)
 	}
 	return ret
+}
+
+func isNumber(s string) bool {
+	// not [strconv.Atoi] to allow decimal separator
+	for _, ch := range s {
+		if !unicode.IsDigit(ch) && ch != '.' && ch != '-' {
+			return false
+		}
+	}
+	return true
 }

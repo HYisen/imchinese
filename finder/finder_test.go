@@ -47,6 +47,7 @@ func TestFind(t *testing.T) {
 		{"date", "2014-12-10", nil},
 		{"version number", "1.10", nil},
 		{"abbreviation with dots", "茶汤颜色也从唐宋时的绿色（a.k.a. 抹茶）变成了明清时的黄色", []string{"a.k.a."}},
+		{"English and Number", "Go 1.22", []string{"Go 1.22"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
