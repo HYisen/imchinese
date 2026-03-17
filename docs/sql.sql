@@ -67,3 +67,7 @@ FROM (SELECT model_id,
          LEFT JOIN views v ON sub.model_id = v.model_id
          LEFT JOIN existences e ON v.id = e.view_id
 WHERE e.id IS NOT NULL;
+
+SELECT *
+FROM views
+         LEFT JOIN models ON views.model_id = models.id;
