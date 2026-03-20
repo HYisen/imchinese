@@ -1,6 +1,6 @@
 package models
 
-//go:generate gorm gen -i model.go -o ../generated
+//go:generate go tool gorm gen -i model.go -o ../generated
 
 type Model struct {
 	ID          int
