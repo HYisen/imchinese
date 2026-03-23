@@ -11,13 +11,13 @@ type View struct {
 	ID      int
 	Name    string
 	ModelID int
-	Model   Model
+	Model   *Model
 }
 
 type Existence struct {
 	ID     int
 	ViewID int
-	View   View
+	View   *View
 	Source string
 	Reason string
 	Tag    int

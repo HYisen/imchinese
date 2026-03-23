@@ -4,6 +4,9 @@ CREATE TABLE models
     explanation TEXT NOT NULL
 ) STRICT;
 
+INSERT INTO models (id, explanation)
+VALUES (0, 'undefined');
+
 CREATE TABLE views
 (
     id       INTEGER PRIMARY KEY ASC,

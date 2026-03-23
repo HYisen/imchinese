@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"imchinese/finder"
+	"imchinese/repository/models"
 	"imchinese/repository/view"
 	"log"
 	"os"
@@ -29,6 +30,7 @@ func playRepo(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	db = db.Debug()
 	mr, err := view.NewRepository(db)
 	if err != nil {
 		return err
@@ -41,7 +43,15 @@ func playRepo(ctx context.Context) error {
 	for _, one := range all {
 		fmt.Printf("%+v\n", one)
 	}
-	return nil
+
+	return mr.Save(ctx, models.Existence{
+		View: &models.View{
+			Name: "NAME3",
+		},
+		Source: "SSS3",
+		Reason: "RRR3",
+		Tag:    0,
+	})
 }
 
 func prettyPrint(candidates []finder.Candidate) {
