@@ -58,15 +58,11 @@ func saveWithoutTransaction(ctx context.Context, tx *gorm.DB, e models.Existence
 	// One more thing, I shall highlight that our goal is to keep simple stable code, not introducing another DSL.
 
 	if view == nil {
-		if err := gorm.G[models.View](tx).Set(
-			generated.View.ModelID.Set(0),
-			generated.View.Name.Set(e.View.Name),
-		).Create(ctx); err != nil {
-			return err
+		view = &models.View{
+			Name:    e.View.Name,
+			ModelID: 0,
 		}
-
-		view, err = findViewByName(ctx, tx, e.View.Name)
-		if err != nil {
+		if err := gorm.G[models.View](tx).Create(ctx, view); err != nil {
 			return err
 		}
 	}
