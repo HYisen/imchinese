@@ -6,9 +6,9 @@ import (
 )
 
 type Candidate struct {
-	Word string
-	Line string
-	Path string
+	Word  string
+	Quote string
+	Path  string
 }
 
 func isDotOrHyphenInsideWord(i int, s string) bool {
@@ -47,9 +47,9 @@ func trimAndAppendNonEmpty(slice []Candidate, s string, text Text) []Candidate {
 	s = strings.TrimSpace(s)
 	if s != "" {
 		slice = append(slice, Candidate{
-			Word: s,
-			Line: text.Item,
-			Path: text.Path,
+			Word:  s,
+			Quote: text.Item,
+			Path:  text.Path,
 		})
 	}
 	return slice

@@ -60,14 +60,47 @@ func (hh *HeadingHelper) Next(headingLevelStartsFromOne int, text string) {
 	hh.recent = neo
 }
 
+func CutLine(s string) []string {
+	var ret []string
+	chs := []rune(s)
+	var begin int
+	for i, ch := range chs {
+		if isCutIndicator(ch) {
+			ret = append(ret, string(chs[begin:i+1]))
+			begin = i + 1
+		}
+	}
+	if begin < len(s) {
+		ret = append(ret, string(chs[begin:]))
+	}
+	return ret
+}
+
+func isCutIndicator(ch rune) bool {
+	return ch == '，' || ch == '。' || ch == '！' || ch == '？'
+}
+
+func lineTooLong(line string) bool {
+	return len(line) > 60
+}
+
 func (f *Filter) save(s string) {
 	if f.Dump {
 		fmt.Println(f.indent() + s)
 	}
-	f.Result = append(f.Result, Text{
-		Item: s,
-		Path: f.hh.Path(),
-	})
+	if lineTooLong(s) {
+		for _, sub := range CutLine(s) {
+			f.Result = append(f.Result, Text{
+				Item: sub,
+				Path: f.hh.Path(),
+			})
+		}
+	} else {
+		f.Result = append(f.Result, Text{
+			Item: s,
+			Path: f.hh.Path(),
+		})
+	}
 }
 
 type HasChildrenCount interface {

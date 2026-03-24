@@ -19,6 +19,7 @@ type Existence struct {
 	ViewID int
 	View   *View
 	Source string
+	Quote  string
 	Reason string
 	Tag    int
 }

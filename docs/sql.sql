@@ -20,9 +20,10 @@ CREATE INDEX idx_views_model_id ON views (model_id);
 CREATE TABLE existences
 (
     id      INTEGER PRIMARY KEY ASC,
-    view_id INTEGER                               NOT NULL,
-    source  TEXT                                  NOT NULL,
-    reason  TEXT                                  NOT NULL, -- why that view of model is chosen in this existence
+    view_id INTEGER                                 NOT NULL,
+    source  TEXT                                    NOT NULL,
+    quote   TEXT                                    NOT NULL,
+    reason  TEXT                                    NOT NULL, -- why that view of model is chosen in this existence
     tag     INTEGER CHECK ( tag >= 0 AND tag <= 3) NOT NULL,
     FOREIGN KEY (view_id) REFERENCES views (id)
 ) STRICT;
@@ -52,9 +53,9 @@ VALUES (1, 'latest', 1),
        (7, '成语', 2),
        (8, 'neta', 2);
 
-INSERT INTO existences(id, view_id, source, reason, tag)
-VALUES (1, 1, 'GoVersionChronology/缘起', 'go get example.com/m@latest', 2),
-       (2, 3, 'GoVersionChronology/meme/用词的梗', '短', 0);
+INSERT INTO existences(id, view_id, source, quote, reason, tag)
+VALUES (1, 1, 'GoVersionChronology/缘起', '所以你可以猜到我会选择 latest。', 'go get example.com/m@latest', 2),
+       (2, 3, 'GoVersionChronology/meme/用词的梗', '', '短', 0);
 
 -- This is the SQL that could output the original manual table format.
 -- To be honest, I would rather not implement the combine logic in SQL.

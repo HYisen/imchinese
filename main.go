@@ -56,6 +56,6 @@ func playRepo(ctx context.Context) error {
 
 func prettyPrint(candidates []finder.Candidate) {
 	for i, candidate := range candidates {
-		fmt.Printf("%4d %s 「%s」 %s\n", i, candidate.Word, candidate.Line, candidate.Path)
+		fmt.Printf("%4d %s 「%s」 %s\n", i, candidate.Word, candidate.Quote, candidate.Path)
 	}
 }

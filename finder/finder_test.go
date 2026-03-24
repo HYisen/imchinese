@@ -1,6 +1,8 @@
 package finder
 
 import (
+	"fmt"
+	"maps"
 	"reflect"
 	"testing"
 )
@@ -59,6 +61,39 @@ func TestFind(t *testing.T) {
 			}
 			if got := words; !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Find() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestQuote(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       string
+		itemToQuote map[string]string
+	}{
+		{
+			"one",
+			"所以你可以猜到我会选择 latest。作为 edge-runner 除了冒着相信上游的风险外，也是",
+			map[string]string{
+				"latest":      "所以你可以猜到我会选择 latest。",
+				"edge-runner": "作为 edge-runner 除了冒着相信上游的风险外，",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			find := Find(tt.input)
+			itemToQuote := maps.Clone(tt.itemToQuote)
+			fmt.Println(itemToQuote)
+			for _, candidate := range find {
+				if tt.itemToQuote[candidate.Word] != candidate.Quote {
+					t.Errorf("[%s] got %q, want %q", candidate.Word, candidate.Quote, itemToQuote[candidate.Word])
+				}
+				delete(itemToQuote, candidate.Word)
+			}
+			if len(itemToQuote) > 0 {
+				t.Errorf("unmatched itemToQuote %v", itemToQuote)
 			}
 		})
 	}
