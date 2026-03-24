@@ -11,15 +11,15 @@ type Candidate struct {
 	Path string
 }
 
-func isDotInsideWord(i int, s string) bool {
-	if s[i] != '.' {
+func isDotOrHyphenInsideWord(i int, s string) bool {
+	if s[i] != '.' && s[i] != '-' {
 		return false
 	}
 	if i+1 == len(s) {
 		return false
 	}
 	// dot as end of sentence
-	if i+2 < len(s) && s[i+1] == ' ' && unicode.IsUpper(rune(s[i+2])) {
+	if s[i] == '.' && i+2 < len(s) && s[i+1] == ' ' && unicode.IsUpper(rune(s[i+2])) {
 		return false
 	}
 	return true
@@ -32,7 +32,7 @@ func FilterWord(text Text) []Candidate {
 	tables := []*unicode.RangeTable{unicode.Han, unicode.Punct}
 	var sb strings.Builder
 	for i, ch := range text.Item {
-		if unicode.IsOneOf(tables, ch) && !isDotInsideWord(i, text.Item) {
+		if unicode.IsOneOf(tables, ch) && !isDotOrHyphenInsideWord(i, text.Item) {
 			candidates = trimAndAppendNonEmpty(candidates, sb.String(), text)
 			sb.Reset()
 		} else {
