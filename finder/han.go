@@ -22,10 +22,6 @@ func isDotInsideWord(i int, s string) bool {
 	if i+2 < len(s) && s[i+1] == ' ' && unicode.IsUpper(rune(s[i+2])) {
 		return false
 	}
-	//// dot between numbers
-	//if (i-1 >= 0 && unicode.IsNumber(rune(s[i-1]))) || (i+1 < len(s) && unicode.IsNumber(rune(s[i+1]))) {
-	//	return false
-	//}
 	return true
 }
 
@@ -44,7 +40,6 @@ func FilterWord(text Text) []Candidate {
 		}
 	}
 	candidates = trimAndAppendNonEmpty(candidates, sb.String(), text)
-	// Considering the punctuation separating, only natual number would be possible here.
 	return DropNumber(candidates)
 }
 
