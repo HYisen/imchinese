@@ -47,6 +47,13 @@ func findViewByName(ctx context.Context, db *gorm.DB, name string) (*models.View
 	return view, nil
 }
 
+// undefinedModelID provides a Model ID for View s that have not been concentrated.
+// The NULL FK in SQL may be another solution, but GORM CLI use zero when we left FK field as empty,
+// which eventually leads to the zero FK as a result or breaking the FOREIGN KEY constraint.
+func undefinedModelID() int {
+	return 0
+}
+
 func saveWithoutTransaction(ctx context.Context, tx *gorm.DB, e models.Existence) error {
 	view, err := findViewByName(ctx, tx, e.View.Name)
 	if err != nil {
@@ -60,7 +67,7 @@ func saveWithoutTransaction(ctx context.Context, tx *gorm.DB, e models.Existence
 	if view == nil {
 		view = &models.View{
 			Name:    e.View.Name,
-			ModelID: 0,
+			ModelID: undefinedModelID(),
 		}
 		if err := gorm.G[models.View](tx).Create(ctx, view); err != nil {
 			return err
