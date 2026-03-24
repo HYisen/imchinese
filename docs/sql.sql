@@ -23,7 +23,7 @@ CREATE TABLE existences
     view_id INTEGER                               NOT NULL,
     source  TEXT                                  NOT NULL,
     reason  TEXT                                  NOT NULL, -- why that view of model is chosen in this existence
-    tag     INTEGER CHECK ( tag >= 0 AND tag < 3) NOT NULL,
+    tag     INTEGER CHECK ( tag >= 0 AND tag <= 3) NOT NULL,
     FOREIGN KEY (view_id) REFERENCES views (id)
 ) STRICT;
 
