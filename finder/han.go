@@ -1,6 +1,7 @@
 package finder
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
 )
@@ -9,6 +10,10 @@ type Candidate struct {
 	Word  string
 	Quote string
 	Path  string
+}
+
+func (c Candidate) Occasion() string {
+	return fmt.Sprintf("「%s」%s", c.Quote, c.Path)
 }
 
 func isDotOrHyphenInsideWord(i int, s string) bool {

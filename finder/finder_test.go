@@ -1,7 +1,6 @@
 package finder
 
 import (
-	"fmt"
 	"maps"
 	"reflect"
 	"testing"
@@ -85,7 +84,6 @@ func TestQuote(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			find := Find(tt.input)
 			itemToQuote := maps.Clone(tt.itemToQuote)
-			fmt.Println(itemToQuote)
 			for _, candidate := range find {
 				if tt.itemToQuote[candidate.Word] != candidate.Quote {
 					t.Errorf("[%s] got %q, want %q", candidate.Word, candidate.Quote, itemToQuote[candidate.Word])
