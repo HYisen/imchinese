@@ -63,9 +63,9 @@ func (h *Handler) Dump() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("ID\tModelID\tName\t")
+	fmt.Println("ID\tModelID\tName\tCount")
 	for _, one := range all {
-		fmt.Printf("%4d\t%4d\t%s\n", one.ID, one.ModelID, one.Name)
+		fmt.Printf("%4d\t%4d\t%2d\t%s\n", one.ViewID, one.ModelID, one.Count, one.Name)
 	}
 }
 

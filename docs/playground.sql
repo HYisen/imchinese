@@ -37,3 +37,8 @@ WHERE e.id IS NOT NULL;
 SELECT *
 FROM views
          LEFT JOIN models ON views.model_id = models.id;
+
+SELECT views.id, model_id, name, COUNT(existences.id)
+FROM existences
+         JOIN views ON existences.view_id = views.id
+GROUP BY view_id;
