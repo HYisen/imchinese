@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"imchinese/finder"
 	"imchinese/repository/models"
@@ -15,7 +16,60 @@ import (
 	"gorm.io/gorm"
 )
 
+var mode = flag.String("mode", "dump", "dump|scan")
+var debug = flag.Bool("debug", false, "enable SQL debug print mode")
+
 func main() {
+	flag.Parse()
+
+	handler, err := NewHandler(*debug)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	switch *mode {
+	case "dump":
+		handler.Dump()
+	case "scan":
+		handler.Scan()
+	default:
+		log.Fatalf("unsupported mode %s", *mode)
+	}
+}
+
+type Handler struct {
+	vr *view.Repository
+}
+
+func NewHandler(debug bool) (*Handler, error) {
+	dial := sqlite.Open(fmt.Sprintf("%s?_foreign_keys=on", "db.sqlite"))
+	db, err := gorm.Open(dial, &gorm.Config{TranslateError: true})
+	if err != nil {
+		return nil, err
+	}
+	if debug {
+		db = db.Debug()
+	}
+
+	vr, err := view.NewRepository(db)
+	if err != nil {
+		return nil, err
+	}
+	return &Handler{vr: vr}, nil
+}
+
+func (h *Handler) Dump() {
+	all, err := h.vr.FindAll(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("ID\tModelID\tName\t")
+	for _, one := range all {
+		fmt.Printf("%4d\t%4d\t%s\n", one.ID, one.ModelID, one.Name)
+	}
+}
+
+func (h *Handler) Scan() {
 	data, err := os.ReadFile("text.md")
 	if err != nil {
 		log.Fatal(err)
@@ -23,24 +77,13 @@ func main() {
 	found := finder.Find(string(data))
 	prettyPrint(found)
 
-	if err := playRepo(context.Background(), found); err != nil {
+	if err := h.save(context.Background(), found); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func playRepo(ctx context.Context, candidates []finder.Candidate) error {
-	dial := sqlite.Open(fmt.Sprintf("%s?_foreign_keys=on", "db.sqlite"))
-	db, err := gorm.Open(dial, &gorm.Config{TranslateError: true})
-	if err != nil {
-		return err
-	}
-	//db = db.Debug()
-	mr, err := view.NewRepository(db)
-	if err != nil {
-		return err
-	}
-
-	all, err := mr.FindAll(ctx)
+func (h *Handler) save(ctx context.Context, candidates []finder.Candidate) error {
+	all, err := h.vr.FindAll(ctx)
 	if err != nil {
 		return err
 	}
@@ -64,7 +107,7 @@ func playRepo(ctx context.Context, candidates []finder.Candidate) error {
 			continue
 		}
 		seen[candidate.Word] = true
-		if err := mr.Save(ctx, models.Existence{
+		if err := h.vr.Save(ctx, models.Existence{
 			View: &models.View{
 				Name: candidate.Word,
 			},
