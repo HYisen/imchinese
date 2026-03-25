@@ -31,6 +31,7 @@ CREATE TABLE existences
     quote   TEXT                                    NOT NULL,
     reason  TEXT                                    NOT NULL, -- why that view of model is chosen in this existence
     tag     INTEGER CHECK ( tag >= -1 AND tag <= 3) NOT NULL, -- -1 for undefined.
+    why_not TEXT                                    NOT NULL, -- exists but invalid, shall be ignored reason, empty if valid
     FOREIGN KEY (view_id) REFERENCES views (id)
 ) STRICT;
 

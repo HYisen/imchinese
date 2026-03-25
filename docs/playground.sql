@@ -15,9 +15,9 @@ VALUES (1, 'latest', 1),
        (7, '成语', 2),
        (8, 'neta', 2);
 
-INSERT INTO existences(id, view_id, source, quote, reason, tag)
-VALUES (1, 1, 'GoVersionChronology/缘起', '所以你可以猜到我会选择 latest。', 'go get example.com/m@latest', 2),
-       (2, 3, 'GoVersionChronology/meme/用词的梗', '', '短', 0);
+INSERT INTO existences(id, view_id, source, quote, reason, tag, why_not)
+VALUES (1, 1, 'GoVersionChronology/缘起', '所以你可以猜到我会选择 latest。', 'go get example.com/m@latest', 2, ''),
+       (2, 3, 'GoVersionChronology/meme/用词的梗', '', '短', 0, '');
 
 -- This is the SQL that could output the original manual table format.
 -- To be honest, I would rather not implement the combine logic in SQL.

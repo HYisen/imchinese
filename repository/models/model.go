@@ -22,4 +22,5 @@ type Existence struct {
 	Quote  string
 	Reason string
 	Tag    int
+	WhyNot string
 }

@@ -83,5 +83,6 @@ func saveWithoutTransaction(ctx context.Context, tx *gorm.DB, e models.Existence
 		generated.Existence.Reason.Set(e.Reason),
 		generated.Existence.Source.Set(e.Source),
 		generated.Existence.Quote.Set(e.Quote),
+		generated.Existence.WhyNot.Set(""),
 	).Create(ctx)
 }
