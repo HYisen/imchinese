@@ -7,6 +7,7 @@ import (
 	"imchinese/repository/models"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Repository struct {
@@ -26,7 +27,7 @@ type Stat struct {
 	Count   int
 }
 
-func (r *Repository) FindAll(ctx context.Context) ([]Stat, error) {
+func (r *Repository) FindAllViews(ctx context.Context) ([]Stat, error) {
 	views, err := gorm.G[models.View](r.db).Find(ctx)
 	if err != nil {
 		return nil, err
@@ -46,6 +47,12 @@ func (r *Repository) FindAll(ctx context.Context) ([]Stat, error) {
 		})
 	}
 	return ret, err
+}
+
+func (r *Repository) FindAllExistences(ctx context.Context) ([]models.Existence, error) {
+	return gorm.G[models.Existence](r.db).
+		Joins(clause.LeftJoin.Association("View"), nil).
+		Find(ctx)
 }
 
 func (r *Repository) Save(ctx context.Context, e models.Existence) error {

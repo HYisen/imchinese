@@ -59,13 +59,22 @@ func NewHandler(debug bool) (*Handler, error) {
 }
 
 func (h *Handler) Dump() {
-	all, err := h.vr.FindAll(context.Background())
+	all, err := h.vr.FindAllViews(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("ID\tModelID\tName\tCount")
 	for _, one := range all {
 		fmt.Printf("%4d\t%4d\t%2d\t%s\n", one.ViewID, one.ModelID, one.Count, one.Name)
+	}
+
+	es, err := h.vr.FindAllExistences(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("ID\tModelID\tName\tTag\tReason\tWhyNot\tPath\tQuote\t")
+	for _, e := range es {
+		fmt.Printf("%4d\t%4d\t%s\t%2d\t%s\t%s\t%s\t%s\n", e.ID, e.View.ModelID, e.View.Name, e.Tag, e.Reason, e.WhyNot, e.Source, e.Quote)
 	}
 }
 
@@ -83,7 +92,7 @@ func (h *Handler) Scan() {
 }
 
 func (h *Handler) save(ctx context.Context, candidates []finder.Candidate) error {
-	all, err := h.vr.FindAll(ctx)
+	all, err := h.vr.FindAllViews(ctx)
 	if err != nil {
 		return err
 	}
