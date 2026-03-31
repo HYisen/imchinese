@@ -2,6 +2,7 @@ package view
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"imchinese/repository/generated"
 	"imchinese/repository/models"
@@ -114,4 +115,81 @@ func saveWithoutTransaction(ctx context.Context, tx *gorm.DB, e models.Existence
 		generated.Existence.Quote.Set(e.Quote),
 		generated.Existence.WhyNot.Set(""),
 	).Create(ctx)
+}
+
+func divergence(ctx context.Context, db *gorm.DB, words []string) (phantoms []string, beings []models.View, err error) {
+	for _, word := range words {
+		one, err := gorm.G[models.View](db).Where(generated.View.Name.Eq(word)).Take(ctx)
+		if err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, nil, err
+			}
+			phantoms = append(phantoms, word)
+		}
+		beings = append(beings, one)
+	}
+	return phantoms, beings, nil
+}
+
+func digestModelID(views []models.View) int {
+	for _, view := range views {
+		if view.ModelID != 0 {
+			return view.ModelID
+		}
+	}
+	return 0
+}
+
+func arrangeSameModel(ctx context.Context, db *gorm.DB, beings []models.View) (modelID int, err error) {
+	modelID = digestModelID(beings)
+	if modelID == 0 {
+		neo := models.Model{
+			Explanation: "unsettled",
+		}
+		if err := gorm.G[models.Model](db).Create(ctx, &neo); err != nil {
+			return 0, err
+		}
+		for _, view := range beings {
+			if _, err := gorm.G[models.View](db).
+				Where(generated.View.ID.Eq(view.ID)).
+				Set(generated.View.ModelID.Set(neo.ID)).
+				Update(ctx); err != nil {
+				return 0, err
+			}
+		}
+		modelID = neo.ID
+	}
+	return modelID, nil
+}
+
+func instancePhantoms(ctx context.Context, db *gorm.DB, names []string, modelID int) error {
+	for _, name := range names {
+		if err := gorm.G[models.View](db).
+			Set(generated.View.Name.Set(name),
+				generated.View.ModelID.Set(modelID)).
+			Create(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func linkWithoutTransaction(ctx context.Context, db *gorm.DB, words []string) error {
+	phantoms, beings, err := divergence(ctx, db, words)
+	if err != nil {
+		return err
+	}
+
+	modelID, err := arrangeSameModel(ctx, db, beings)
+	if err != nil {
+		return err
+	}
+
+	return instancePhantoms(ctx, db, phantoms, modelID)
+}
+
+func (r *Repository) Link(ctx context.Context, words []string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		return linkWithoutTransaction(ctx, tx, words)
+	})
 }

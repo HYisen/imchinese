@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"flag"
@@ -11,12 +12,13 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"strings"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-var mode = flag.String("mode", "dump", "dump|scan")
+var mode = flag.String("mode", "join", "dump|scan|join")
 var debug = flag.Bool("debug", false, "enable SQL debug print mode")
 
 func main() {
@@ -32,6 +34,8 @@ func main() {
 		handler.Dump()
 	case "scan":
 		handler.Scan()
+	case "join":
+		handler.Join()
 	default:
 		log.Fatalf("unsupported mode %s", *mode)
 	}
@@ -56,6 +60,16 @@ func NewHandler(debug bool) (*Handler, error) {
 		return nil, err
 	}
 	return &Handler{vr: vr}, nil
+}
+
+func (h *Handler) Join() {
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+	words := strings.Split(scanner.Text(), " ")
+	err := h.vr.Link(context.Background(), words)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (h *Handler) Dump() {
